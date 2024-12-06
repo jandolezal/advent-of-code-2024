@@ -9,35 +9,66 @@ from collections import defaultdict
 def prepare_input(filepath):
     protorules, protoupdates = open(filepath).read().split("\n\n")
 
-    protorules = [line.split("|") for line in protorules.strip().split("\n")]
-
-    rules = defaultdict(set)
-    for f, s in protorules:
-        rules[f].add(s)
-
+    rules = [line.split("|") for line in protorules.strip().split("\n")]
+    pages = sorted(list(set([item for row in rules for item in row])))
     updates = [line.split(",") for line in protoupdates.strip().split("\n")]
 
-    return dict(rules=rules, updates=updates)
+    return dict(rules=rules, updates=updates, pages=pages)
 
 
 def part1(input):
-    rules = input["rules"]
-    updates = [line[::-1] for line in input["updates"]]
-    results = []
-    correct_update = True
+    # map from page to pages (in a set) which are higher in this world
+    rules = defaultdict(set)
+    for f, s in input["rules"]:
+        rules[f].add(s)
 
-    # going backwards in original updates
-    # the rules dict is using preceding page as a key
-    for update in updates:
-        for i in range(len(update)):
-            if set(update[i:]) & rules[update[i]]:
-                correct_update = False
-                break
-        if correct_update:
-            results.append(update)
-        correct_update = True
+    updates = list(input["updates"])
 
-    return sum([int(item[len(item) // 2]) for item in results])
+    result = 0
+
+    for update_ in updates:
+        update_copy = update_[:]
+        for walk in range(len(update_copy)):
+            # compare neighbouring pages and if first is higher move to right
+            for i in range(len(update_copy) - 1):
+                f = update_copy[i]
+                s = update_copy[i + 1]
+                if s not in rules[f]:  # first page is higher then the second
+                    page = update_copy.pop(i)
+                    update_copy.insert(i + 1, page)
+
+        if update_ == update_copy:
+            result += int(update_[len(update_) // 2])
+
+    return result
+
+
+def part2(input):
+    # map from page to pages (in a set) which are higher in this world
+    rules = defaultdict(set)
+    for f, s in input["rules"]:
+        rules[f].add(s)
+
+    updates = list(input["updates"])
+
+    result = 0
+
+    for update_ in updates:
+        update_copy = update_[:]
+        for walk in range(len(update_copy)):
+            # compare neighbouring pages and if first is higher move to right
+            for i in range(len(update_copy) - 1):
+                f = update_copy[i]
+                s = update_copy[i + 1]
+                if s not in rules[f]:  # first page is higher then the second
+                    page = update_copy.pop(i)
+                    update_copy.insert(i + 1, page)
+
+        # only this part differs from part 1 but i am too lazy to refactor it :-)
+        if update_ != update_copy:
+            result += int(update_copy[len(update_copy) // 2])
+
+    return result
 
 
 # part 1
@@ -48,3 +79,11 @@ assert test_result1 == 143, f"Test result for part 1 should be 143, not {test_re
 input = prepare_input("05/input.txt")
 result1 = part1(input)
 print(result1)
+
+
+# part 2
+test_result2 = part2(test_input)
+assert test_result2 == 123, f"Test result for part 2 should be 123, not {test_result2}"
+
+result2 = part2(input)
+print(result2)
