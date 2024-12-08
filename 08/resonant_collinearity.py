@@ -35,7 +35,7 @@ def part1(input):
             candidate1 = (f[0] - diff[0], f[1] - diff[1])
             candidate2 = (s[0] + diff[0], s[1] + diff[1])
             for candidate in [candidate1, candidate2]:
-                # check if the candidate coordinates are out of the grid
+                # check if the candidate coordinates are within the grid
                 if (
                     (candidate[0] >= 0)
                     and (candidate[1] >= 0)
@@ -43,6 +43,58 @@ def part1(input):
                     and (candidate[1] < len(lines[0]))
                 ):
                     antinodes[frequency].append(candidate)
+
+    return len(
+        set([item for sublist in antinodes.values() for item in sublist])
+    )  # unique antinodes
+
+
+# TODO: Generalize to handle also part 1 (cap on single run)
+# TODO: DRY when exploring directions
+def part2(input):
+    coordinates = input["coordinates"]
+    # just to know the grid boundaries
+    lines = input["lines"]
+
+    # for each frequency relevant antinodes
+    antinodes = defaultdict(list)
+
+    for frequency, coors in coordinates.items():
+        pairs = list(combinations(coors, 2))
+        for f, s in pairs:
+            diff = s[0] - f[0], s[1] - f[1]
+            # explore first direction
+            antinodes[frequency].append(f)  # antenas are included
+            run = 1
+            while True:
+                candidate = (f[0] - run * diff[0], f[1] - run * diff[1])
+                # check if the candidate coordinates are within the grid
+                if (
+                    (candidate[0] >= 0)
+                    and (candidate[1] >= 0)
+                    and (candidate[0] < len(lines))
+                    and (candidate[1] < len(lines[0]))
+                ):
+                    antinodes[frequency].append(candidate)
+                    run += 1
+                else:
+                    break
+            # explore second direction
+            antinodes[frequency].append(s)  # antenas are included
+            run = 1
+            while True:
+                candidate = (s[0] + run * diff[0], s[1] + run * diff[1])
+                # check if the candidate coordinates are within the grid
+                if (
+                    (candidate[0] >= 0)
+                    and (candidate[1] >= 0)
+                    and (candidate[0] < len(lines))
+                    and (candidate[1] < len(lines[0]))
+                ):
+                    antinodes[frequency].append(candidate)
+                    run += 1
+                else:
+                    break
 
     return len(
         set([item for sublist in antinodes.values() for item in sublist])
@@ -58,3 +110,12 @@ input = prepare_input("08/input.txt")
 result1 = part1(input)
 print(result1)
 # 354 is correct
+
+
+# part 2
+test_result2 = part2(test_input)
+assert test_result2 == 34, f"Test result for part 2 should be 34, not {test_result2}"
+
+result2 = part2(input)
+print(result2)
+# 1263 is correct
