@@ -3,7 +3,6 @@
 https://adventofcode.com/2024/day/10
 """
 
-import copy
 
 
 def prepare_input(filepath):
@@ -53,43 +52,15 @@ def part1(input):
     return sum(len(set(peaks)) for t, peaks in results.items())
 
 
-# TODO: too lazy not to repeat myself :-)
-def hike2(step, height, input, traveled=None):
-    offsets = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-    # stay on map
-    rows, cols = max(input.keys())[0], max(input.keys())[1]
-
-    if height == 9:
-        # gather all unique paths traveled
-        yield traveled
-    else:
-        neighbours = {}
-        for offset in offsets:
-            neighbour = (step[0] + offset[0], step[1] + offset[1])
-            # is it on a map and higher one point?
-            if (
-                (neighbour[0] >= 0)
-                and (neighbour[1] >= 0)
-                and (neighbour[0] <= rows)
-                and (neighbour[1] <= cols)
-                and (input[neighbour] == height + 1)
-            ):
-                neighbours[neighbour] = input[neighbour]
-        for neighbour, height in neighbours.items():
-            traveled = copy.deepcopy(traveled)
-            traveled[step] = height
-            yield from hike2(neighbour, height, input, traveled)
-
-
 def part2(input):
     trailheads = {k: v for k, v in input.items() if v == 0}
 
     results = {}
 
     for step, height in trailheads.items():
-        traveled = {step: height}
-        results[step] = list(hike2(step, height, input, traveled))
+        results[step] = list(hike(step, height, input))
 
+    # only this differs from from part1
     # unique trails to the peak per traihead
     return sum(len(peaks) for t, peaks in results.items())
 
@@ -102,6 +73,7 @@ assert test_result1 == 36, f"Test result for part 1 should be 36, not {test_resu
 input = prepare_input("10/input.txt")
 result1 = part1(input)
 print(result1)
+# 798
 
 
 # part 2
@@ -110,3 +82,4 @@ assert test_result2 == 81, f"Test result for part 2 should be 81, not {test_resu
 
 result2 = part2(input)
 print(result2)
+# 1816
